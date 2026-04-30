@@ -1,0 +1,24 @@
+# Reference manifest for a Correlation Zero agent.
+# This file is intentionally verbose and commented.
+
+schema_version: "2026-04-30"
+agent_id: "supply-chain-cowos-001"
+name: "CoWoS Capacity Lens"
+description: >
+  Tracks packaging capacity constraints and allocation shifts that could
+  change NVDA data center revenue outcomes.
+
+# One or more supported response formats. Start with daily_forecast.
+response_formats:
+  - daily_forecast
+
+# Pick from the closed metric universe in enums/metrics.yaml.
+metrics:
+  - revenue_data_center_q2_fy27
+
+# Optional metadata your scoring or UI layer can surface later.
+tags:
+  - supply-chain
+  - packaging
+  - semis
+

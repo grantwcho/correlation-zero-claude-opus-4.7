@@ -1,0 +1,134 @@
+import importlib.util
+import inspect
+import sys
+from pathlib import Path
+
+import yaml
+
+from .agent_base import Agent
+from .schemas import Prediction
+
+
+REQUIRED_MANIFEST_FIELDS = [
+    "schema_version",
+    "agent_id",
+    "name",
+    "response_formats",
+    "metrics",
+]
+
+
+def load_manifest(repo_dir: Path) -> dict:
+    manifest_path = repo_dir / "manifest.yaml"
+    if not manifest_path.exists():
+        raise ValueError("Missing manifest.yaml")
+
+    with manifest_path.open("r", encoding="utf-8") as handle:
+        manifest = yaml.safe_load(handle) or {}
+
+    if not isinstance(manifest, dict):
+        raise ValueError("manifest.yaml must parse to an object")
+
+    return manifest
+
+
+def validate_manifest_data(manifest: dict) -> list[str]:
+    errors: list[str] = []
+
+    for field_name in REQUIRED_MANIFEST_FIELDS:
+        if field_name not in manifest:
+            errors.append(f"manifest.yaml is missing required field: {field_name}")
+
+    metrics = manifest.get("metrics", [])
+    if metrics and not isinstance(metrics, list):
+        errors.append("manifest.yaml field 'metrics' must be a list")
+
+    response_formats = manifest.get("response_formats", [])
+    if response_formats and not isinstance(response_formats, list):
+        errors.append("manifest.yaml field 'response_formats' must be a list")
+
+    return errors
+
+
+def load_agent_module(repo_dir: Path):
+    agent_path = repo_dir / "agent.py"
+    if not agent_path.exists():
+        raise ValueError("Missing agent.py")
+
+    spec = importlib.util.spec_from_file_location("submitted_agent", agent_path)
+    if spec is None or spec.loader is None:
+        raise ValueError("Could not import agent.py")
+
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def build_agent(module) -> Agent:
+    for _, obj in inspect.getmembers(module, inspect.isclass):
+        if issubclass(obj, Agent) and obj is not Agent:
+            return obj()
+    raise ValueError("agent.py must define a subclass of correlation_zero.Agent")
+
+
+def validate_daily_forecast(agent: Agent, manifest: dict) -> list[str]:
+    metrics = manifest.get("metrics", [])
+    if not metrics:
+        return ["manifest.yaml must include at least one metric"]
+
+    try:
+        result = agent.daily_forecast(metrics[:1])
+    except Exception as exc:
+        return [f"daily_forecast() raised an exception: {exc}"]
+
+    if not isinstance(result, list):
+        return ["daily_forecast() must return a list"]
+
+    errors: list[str] = []
+    for index, item in enumerate(result):
+        if not isinstance(item, Prediction):
+            errors.append(f"daily_forecast() item {index} is not a Prediction object")
+            continue
+        if not item.metric_id:
+            errors.append(f"daily_forecast() item {index} is missing metric_id")
+        if item.unit == "":
+            errors.append(f"daily_forecast() item {index} is missing unit")
+
+    return errors
+
+
+def validate_repo(repo_dir: Path) -> list[str]:
+    manifest = load_manifest(repo_dir)
+    module = load_agent_module(repo_dir)
+    agent = build_agent(module)
+
+    errors = validate_manifest_data(manifest)
+
+    if manifest.get("agent_id") and getattr(agent, "AGENT_ID", None) != manifest["agent_id"]:
+        errors.append("AGENT_ID must match manifest.yaml agent_id")
+
+    errors.extend(validate_daily_forecast(agent, manifest))
+    return errors
+
+
+def main(argv=None) -> int:
+    argv = argv or sys.argv[1:]
+    repo_dir = Path(argv[0]).resolve() if argv else Path.cwd()
+
+    try:
+        errors = validate_repo(repo_dir)
+    except Exception as exc:
+        print(f"x {exc}")
+        return 1
+
+    if errors:
+        for error in errors:
+            print(f"x {error}")
+        return 1
+
+    print("All checks passed")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

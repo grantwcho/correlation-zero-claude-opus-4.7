@@ -1,0 +1,9 @@
+schema_version: "2026-04-30"
+agent_id: "example-data-driven-001"
+name: "Data-Driven Example"
+description: "Agent that aggregates source snapshots before forecasting."
+response_formats:
+  - daily_forecast
+metrics:
+  - revenue_data_center_q2_fy27
+

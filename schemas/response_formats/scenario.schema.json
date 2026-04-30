@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Scenario",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": ["name", "probability"],
+    "properties": {
+      "name": { "type": "string" },
+      "probability": { "type": "number" }
+    }
+  }
+}
+

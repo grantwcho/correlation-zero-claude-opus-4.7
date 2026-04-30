@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Daily Forecast",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": ["metric_id", "point_estimate", "unit"],
+    "properties": {
+      "metric_id": { "type": "string" },
+      "point_estimate": { "type": "number" },
+      "unit": { "type": "string" },
+      "reasoning_summary": { "type": "string" }
+    }
+  }
+}
+

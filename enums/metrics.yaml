@@ -1,0 +1,8 @@
+- id: revenue_data_center_q2_fy27
+  label: Data Center Revenue Q2 FY27
+  unit: USD_billions
+
+- id: gross_margin_q2_fy27
+  label: Gross Margin Q2 FY27
+  unit: percent
+

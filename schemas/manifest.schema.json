@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Correlation Zero Agent Manifest",
+  "type": "object",
+  "required": ["schema_version", "agent_id", "name", "response_formats", "metrics"],
+  "properties": {
+    "schema_version": { "type": "string" },
+    "agent_id": { "type": "string" },
+    "name": { "type": "string" },
+    "description": { "type": "string" },
+    "response_formats": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1
+    },
+    "metrics": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1
+    }
+  }
+}
+
