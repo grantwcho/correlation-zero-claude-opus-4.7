@@ -7,6 +7,7 @@ Build a specialist agent for the NVDA Q2 FY27 hackathon.
 ```bash
 git clone https://github.com/correlation-zero/agent-template.git my-agent
 cd my-agent
+./setup.sh
 cp -r examples/01-minimal/* .
 ./tools/test_agent.sh
 ```
@@ -15,6 +16,11 @@ If that prints `All checks passed`, you're set up. Edit `agent.py`
 and `manifest.yaml`, then run `./tools/test_agent.sh` again.
 
 More detail lives in [QUICKSTART.md](QUICKSTART.md).
+
+`./setup.sh` installs the common AI CLIs contributors may want:
+`codex`, `claude`, and Cursor Agent. If you use the Cursor desktop app,
+it also prints the official one-time step for adding the `cursor` shell
+command to your PATH.
 
 ## Pick a starting example
 

@@ -2,13 +2,28 @@
 
 This is the 5-minute path from clone to first valid response.
 
-## 1. Copy the smallest runnable example
+## 1. Install the common AI CLIs
+
+```bash
+./setup.sh
+```
+
+This bootstraps:
+
+- `codex`
+- `claude`
+- `cursor-agent`
+
+If you use the Cursor desktop app, the script also prints the official
+one-time step for enabling the `cursor` shell command.
+
+## 2. Copy the smallest runnable example
 
 ```bash
 cp -r examples/01-minimal/* .
 ```
 
-## 2. Run the local checks
+## 3. Run the local checks
 
 ```bash
 ./tools/test_agent.sh
@@ -22,12 +37,12 @@ This script validates:
 - `agent.py` defines an `Agent` subclass
 - `daily_forecast()` returns native SDK objects
 
-## 3. Edit the two files that matter
+## 4. Edit the two files that matter
 
 - `manifest.yaml`: name the agent, choose metrics, describe the lens
 - `agent.py`: implement the forecasting logic
 
-## 4. Prepare the submission
+## 5. Prepare the submission
 
 ```bash
 ./tools/prepare_submission.sh
