@@ -1,34 +1,20 @@
-from correlation_zero import Agent, CI, Prediction
+from correlation_zero import Agent, AgentQuery
 
 
 class FullFeaturedAgent(Agent):
     AGENT_ID = "example-full-featured-001"
 
-    def daily_forecast(self, metrics: list[str]) -> list[Prediction]:
-        return [
-            Prediction(
-                metric_id=metrics[0],
-                point_estimate=41.7,
-                unit="USD_billions",
-                confidence_intervals=[CI(level=0.5, low=40.8, high=42.5)],
-                evidence_refs=["full_featured_source"],
-                reasoning_summary="Reference implementation for the baseline forecast path.",
-            )
-        ]
+    def build_answer(self, query: AgentQuery) -> str:
+        audience = query.context.get("audience", "platform user")
+        metric_note = ""
+        if query.metrics:
+            metric_note = f" Metrics in scope: {', '.join(query.metrics)}."
+        return (
+            f"For {audience}, I would answer: {query.prompt} "
+            "The response is generated from the agent's local logic, optional "
+            "context, and any external systems the contributor chooses to wire in."
+            f"{metric_note}"
+        )
 
-    def scenario(self) -> list[dict]:
-        return [
-            {"name": "base", "probability": 0.6},
-            {"name": "upside", "probability": 0.25},
-            {"name": "downside", "probability": 0.15},
-        ]
-
-    def brief(self) -> dict:
-        return {
-            "headline": "CoWoS expansion supports upside skew.",
-            "summary": "Reference output for a short analyst brief.",
-        }
-
-    def freeform(self) -> str:
-        return "Reference output for an unconstrained narrative response."
-
+    def freeform(self, query: AgentQuery) -> str:
+        return self.build_answer(query)

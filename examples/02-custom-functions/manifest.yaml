@@ -1,0 +1,6 @@
+schema_version: "2026-04-30"
+agent_id: "example-custom-functions-001"
+name: "Custom Functions Example"
+description: "Agent that answers platform queries with local Python helpers."
+response_formats:
+  - freeform

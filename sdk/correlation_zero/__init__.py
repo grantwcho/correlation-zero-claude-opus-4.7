@@ -1,5 +1,4 @@
 from .agent_base import Agent
-from .schemas import CI, Prediction, ResponseFormat
+from .schemas import AgentQuery, ResponseFormat
 
-__all__ = ["Agent", "CI", "Prediction", "ResponseFormat"]
-
+__all__ = ["Agent", "AgentQuery", "ResponseFormat"]

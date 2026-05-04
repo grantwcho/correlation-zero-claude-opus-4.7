@@ -2,10 +2,11 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Query Envelope",
   "type": "object",
-  "required": ["query_id", "response_format"],
+  "required": ["query_id", "response_format", "prompt"],
   "properties": {
     "query_id": { "type": "string" },
-    "response_format": { "type": "string" },
+    "response_format": { "const": "freeform" },
+    "prompt": { "type": "string" },
     "metrics": {
       "type": "array",
       "items": { "type": "string" }
@@ -13,4 +14,3 @@
     "context": { "type": "object" }
   }
 }
-

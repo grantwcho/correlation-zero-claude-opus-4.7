@@ -1,0 +1,6 @@
+schema_version: "2026-04-30"
+agent_id: "example-api-backed-001"
+name: "API-Backed Example"
+description: "Agent that reads external data before answering."
+response_formats:
+  - freeform

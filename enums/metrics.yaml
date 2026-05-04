@@ -1,8 +1,7 @@
-- id: revenue_data_center_q2_fy27
-  label: Data Center Revenue Q2 FY27
-  unit: USD_billions
+- id: example_metric
+  label: Example Metric
+  unit: arbitrary_units
 
-- id: gross_margin_q2_fy27
-  label: Gross Margin Q2 FY27
-  unit: percent
-
+- id: customer_health_score
+  label: Customer Health Score
+  unit: score

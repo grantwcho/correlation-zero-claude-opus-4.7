@@ -6,7 +6,7 @@ from pathlib import Path
 import yaml
 
 from .agent_base import Agent
-from .schemas import Prediction
+from .schemas import AgentQuery, ResponseFormat
 
 
 REQUIRED_MANIFEST_FIELDS = [
@@ -14,7 +14,6 @@ REQUIRED_MANIFEST_FIELDS = [
     "agent_id",
     "name",
     "response_formats",
-    "metrics",
 ]
 
 
@@ -39,13 +38,15 @@ def validate_manifest_data(manifest: dict) -> list[str]:
         if field_name not in manifest:
             errors.append(f"manifest.yaml is missing required field: {field_name}")
 
-    metrics = manifest.get("metrics", [])
-    if metrics and not isinstance(metrics, list):
+    if "metrics" in manifest and not isinstance(manifest.get("metrics"), list):
         errors.append("manifest.yaml field 'metrics' must be a list")
 
-    response_formats = manifest.get("response_formats", [])
-    if response_formats and not isinstance(response_formats, list):
-        errors.append("manifest.yaml field 'response_formats' must be a list")
+    if "response_formats" in manifest:
+        response_formats = manifest.get("response_formats")
+        if not isinstance(response_formats, list):
+            errors.append("manifest.yaml field 'response_formats' must be a list")
+        elif response_formats != [ResponseFormat.FREEFORM.value]:
+            errors.append("manifest.yaml field 'response_formats' must be exactly: [freeform]")
 
     return errors
 
@@ -71,30 +72,35 @@ def build_agent(module) -> Agent:
     raise ValueError("agent.py must define a subclass of correlation_zero.Agent")
 
 
-def validate_daily_forecast(agent: Agent, manifest: dict) -> list[str]:
+def build_test_query(manifest: dict) -> AgentQuery:
     metrics = manifest.get("metrics", [])
-    if not metrics:
-        return ["manifest.yaml must include at least one metric"]
+    if not isinstance(metrics, list):
+        metrics = []
+
+    return AgentQuery(
+        query_id="local-test",
+        prompt="Return a short response that proves the agent can handle a platform query.",
+        context={
+            "agent_id": manifest.get("agent_id"),
+            "agent_name": manifest.get("name"),
+            "validation": True,
+        },
+        metrics=metrics,
+    )
+
+
+def validate_freeform(agent: Agent, manifest: dict) -> list[str]:
+    query = build_test_query(manifest)
 
     try:
-        result = agent.daily_forecast(metrics[:1])
+        result = agent.freeform(query)
     except Exception as exc:
-        return [f"daily_forecast() raised an exception: {exc}"]
+        return [f"freeform(query) raised an exception: {exc}"]
 
-    if not isinstance(result, list):
-        return ["daily_forecast() must return a list"]
+    if not isinstance(result, str):
+        return ["freeform(query) must return a string"]
 
-    errors: list[str] = []
-    for index, item in enumerate(result):
-        if not isinstance(item, Prediction):
-            errors.append(f"daily_forecast() item {index} is not a Prediction object")
-            continue
-        if not item.metric_id:
-            errors.append(f"daily_forecast() item {index} is missing metric_id")
-        if item.unit == "":
-            errors.append(f"daily_forecast() item {index} is missing unit")
-
-    return errors
+    return []
 
 
 def validate_repo(repo_dir: Path) -> list[str]:
@@ -107,7 +113,7 @@ def validate_repo(repo_dir: Path) -> list[str]:
     if manifest.get("agent_id") and getattr(agent, "AGENT_ID", None) != manifest["agent_id"]:
         errors.append("AGENT_ID must match manifest.yaml agent_id")
 
-    errors.extend(validate_daily_forecast(agent, manifest))
+    errors.extend(validate_freeform(agent, manifest))
     return errors
 
 

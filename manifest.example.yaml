@@ -2,23 +2,21 @@
 # This file is intentionally verbose and commented.
 
 schema_version: "2026-04-30"
-agent_id: "supply-chain-cowos-001"
-name: "CoWoS Capacity Lens"
+agent_id: "example-agent-001"
+name: "Example Contributor Agent"
 description: >
-  Tracks packaging capacity constraints and allocation shifts that could
-  change NVDA data center revenue outcomes.
+  Answers platform queries by combining contributor-defined prompts, APIs,
+  functions, and local code.
 
-# One or more supported response formats. Start with daily_forecast.
+# The only supported agent response format is freeform.
 response_formats:
-  - daily_forecast
+  - freeform
 
-# Pick from the closed metric universe in enums/metrics.yaml.
-metrics:
-  - revenue_data_center_q2_fy27
+# Optional: include metric ids if your agent is tied to platform metrics.
+# metrics:
+#   - example_metric
 
 # Optional metadata your scoring or UI layer can surface later.
 tags:
-  - supply-chain
-  - packaging
-  - semis
-
+  - example
+  - contributor-agent

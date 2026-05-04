@@ -20,7 +20,7 @@ one-time step for enabling the `cursor` shell command.
 ## 2. Copy the smallest runnable example
 
 ```bash
-cp -r examples/01-minimal/* .
+cp examples/01-minimal/agent.py examples/01-minimal/manifest.yaml .
 ```
 
 ## 3. Run the local checks
@@ -35,12 +35,13 @@ This script validates:
 
 - `manifest.yaml` exists and has the required fields
 - `agent.py` defines an `Agent` subclass
-- `daily_forecast()` returns native SDK objects
+- `freeform(query)` returns a string
 
 ## 4. Edit the two files that matter
 
-- `manifest.yaml`: name the agent, choose metrics, describe the lens
-- `agent.py`: implement the forecasting logic
+- `manifest.yaml`: name the agent and describe what it does
+- `agent.py`: implement your prompt engineering, API calls, functions, tools, or
+  other logic inside `freeform(query)`
 
 ## 5. Prepare the submission
 

@@ -1,11 +1,10 @@
 # 03 LLM Wrapped
 
 This example is for agents that use an LLM as one stage inside a larger
-pipeline, while still returning explicit structured outputs.
+pipeline, while still returning the single freeform output the platform expects.
 
 It demonstrates:
 
 - isolating the model call behind a helper
-- converting model output into native SDK objects
-- keeping the final contract deterministic
-
+- passing the platform prompt and context into that helper
+- keeping the final contract simple

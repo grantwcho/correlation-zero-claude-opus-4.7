@@ -1,12 +1,8 @@
 schema_version: "2026-04-30"
 agent_id: "example-full-featured-001"
 name: "Full-Featured Example"
-description: "Reference shape for all response formats."
+description: "Reference shape for a complete freeform response."
 response_formats:
-  - daily_forecast
-  - scenario
-  - brief
   - freeform
 metrics:
-  - revenue_data_center_q2_fy27
-
+  - example_metric

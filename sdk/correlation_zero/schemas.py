@@ -1,30 +1,16 @@
-from dataclasses import asdict, dataclass, field
+from dataclasses import dataclass, field
 from enum import Enum
+from typing import Any
 
 
 class ResponseFormat(str, Enum):
-    DAILY_FORECAST = "daily_forecast"
-    SCENARIO = "scenario"
-    BRIEF = "brief"
     FREEFORM = "freeform"
 
 
 @dataclass
-class CI:
-    level: float
-    low: float
-    high: float
-
-
-@dataclass
-class Prediction:
-    metric_id: str
-    point_estimate: float
-    unit: str
-    confidence_intervals: list[CI] = field(default_factory=list)
-    evidence_refs: list[str] = field(default_factory=list)
-    reasoning_summary: str = ""
-
-    def to_dict(self) -> dict:
-        return asdict(self)
-
+class AgentQuery:
+    query_id: str
+    prompt: str
+    response_format: str = ResponseFormat.FREEFORM.value
+    context: dict[str, Any] = field(default_factory=dict)
+    metrics: list[str] = field(default_factory=list)

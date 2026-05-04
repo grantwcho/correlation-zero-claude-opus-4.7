@@ -1,9 +1,6 @@
 schema_version: "2026-04-30"
 agent_id: "example-minimal-001"
 name: "Minimal Example"
-description: "Smallest valid daily forecast agent."
+description: "Smallest valid freeform agent."
 response_formats:
-  - daily_forecast
-metrics:
-  - revenue_data_center_q2_fy27
-
+  - freeform

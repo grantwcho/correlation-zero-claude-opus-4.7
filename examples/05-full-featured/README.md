@@ -4,7 +4,6 @@ This example is the broadest reference in the template.
 
 It demonstrates:
 
-- the baseline `daily_forecast()` contract
-- optional extension points for scenario, brief, and freeform outputs
-- how one lens can expose multiple views of the same underlying logic
-
+- the baseline `freeform(query)` contract
+- how one agent can provide a polished narrative response
+- using optional query context and metrics without making them required
