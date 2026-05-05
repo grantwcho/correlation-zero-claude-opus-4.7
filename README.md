@@ -37,6 +37,7 @@ Optionally set `ANTHROPIC_MODEL` in the environment to override the default
 - Required secret: `ANTHROPIC_API_KEY`
 - External API: `https://api.anthropic.com/v1/messages`
 - Dependencies: `requirements.txt`
+- TLS verification: `certifi` CA bundle for raw HTTPS fallback
 
 ## Supplying Documents
 

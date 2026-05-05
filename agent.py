@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import ssl
 import subprocess
 import sys
 import urllib.error
@@ -413,6 +414,14 @@ def read_docx_text(path: Path) -> str:
     return "\n".join(node.text or "" for node in root.findall(".//w:t", namespace))
 
 
+def verified_ssl_context() -> ssl.SSLContext | None:
+    try:
+        import certifi
+    except ImportError:
+        return None
+    return ssl.create_default_context(cafile=certifi.where())
+
+
 class SemiconductorLanguageShiftAgent(Agent):
     AGENT_ID = "semiconductor-language-shift-agent"
 
@@ -752,7 +761,11 @@ class SemiconductorLanguageShiftAgent(Agent):
         )
 
         try:
-            with urllib.request.urlopen(request, timeout=60) as response:
+            with urllib.request.urlopen(
+                request,
+                timeout=60,
+                context=verified_ssl_context(),
+            ) as response:
                 result = json.loads(response.read().decode("utf-8"))
         except urllib.error.HTTPError as exc:
             body = exc.read().decode("utf-8", errors="ignore")
