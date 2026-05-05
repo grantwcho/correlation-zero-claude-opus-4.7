@@ -9,6 +9,10 @@ The agent uses Claude Opus 4.7 as its baseline model through the Anthropic
 Messages API when `ANTHROPIC_API_KEY` is set. Without a key, it returns a
 deterministic local pre-scan so the platform harness still works.
 
+Runtime metadata is declared in `manifest.yaml` and `runtime.yaml` so submission
+intake can extract the Python entry point, package dependencies, external API,
+and operator-managed secret.
+
 ## Quickstart
 
 ```bash
@@ -24,6 +28,14 @@ ANTHROPIC_API_KEY="..."
 
 Optionally set `ANTHROPIC_MODEL` in the environment to override the default
 `claude-opus-4-7` model id.
+
+## Runtime Contract
+
+- Entry point: `agent.py`
+- Agent class: `SemiconductorLanguageShiftAgent`
+- Required secret: `ANTHROPIC_API_KEY`
+- External API: `https://api.anthropic.com/v1/messages`
+- Dependencies: `requirements.txt`
 
 ## Supplying Documents
 

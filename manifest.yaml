@@ -9,6 +9,36 @@ description: >
 response_formats:
   - freeform
 
+execution_target:
+  language: python
+  entrypoint: agent.py
+  agent_class: SemiconductorLanguageShiftAgent
+  method: freeform
+
+dependency_declaration:
+  python: ">=3.10"
+  requirements_file: requirements.txt
+
+external_apis:
+  - name: Anthropic Messages API
+    provider: Anthropic
+    base_url: https://api.anthropic.com
+    endpoint: /v1/messages
+    auth_env: ANTHROPIC_API_KEY
+    model_env: ANTHROPIC_MODEL
+    default_model: claude-opus-4-7
+
+operator_managed_access:
+  secrets:
+    - name: ANTHROPIC_API_KEY
+      provider: Anthropic
+      required: true
+      purpose: Call Claude Opus 4.7 through the Anthropic Messages API.
+  optional_environment:
+    - name: ANTHROPIC_MODEL
+      default: claude-opus-4-7
+      purpose: Override the baseline Opus model id if the operator pins a dated model alias.
+
 tags:
   - semiconductors
   - earnings-calls

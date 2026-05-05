@@ -1,0 +1,16 @@
+language: python
+entrypoint: agent.py
+agent_class: SemiconductorLanguageShiftAgent
+method: freeform
+dependencies:
+  requirements_file: requirements.txt
+external_apis:
+  - name: Anthropic Messages API
+    provider: Anthropic
+    url: https://api.anthropic.com/v1/messages
+    required_secret: ANTHROPIC_API_KEY
+    default_model: claude-opus-4-7
+secrets:
+  - name: ANTHROPIC_API_KEY
+    provider: Anthropic
+    required: true

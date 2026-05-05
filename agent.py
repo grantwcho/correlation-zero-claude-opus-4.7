@@ -419,7 +419,7 @@ class SemiconductorLanguageShiftAgent(Agent):
         documents = self.collect_documents(query.context)
         fallback = self.build_deterministic_answer(query, documents)
 
-        if not documents or not self.api_key:
+        if not self.api_key:
             return fallback
 
         try:
@@ -684,6 +684,44 @@ class SemiconductorLanguageShiftAgent(Agent):
         return f"{label} because it shows the largest detected shift: {status}."
 
     def run_anthropic(
+        self,
+        query: AgentQuery,
+        documents: list[SourceDocument],
+        fallback: str,
+    ) -> str:
+        try:
+            return self.run_anthropic_sdk(query, documents, fallback)
+        except ImportError:
+            return self.run_anthropic_http(query, documents, fallback)
+
+    def run_anthropic_sdk(
+        self,
+        query: AgentQuery,
+        documents: list[SourceDocument],
+        fallback: str,
+    ) -> str:
+        from anthropic import Anthropic
+
+        client = Anthropic(api_key=self.api_key)
+        message = client.messages.create(
+            model=self.model,
+            max_tokens=1800,
+            temperature=0.2,
+            system=self.system_prompt(),
+            messages=[
+                {
+                    "role": "user",
+                    "content": self.build_model_prompt(query, documents, fallback),
+                }
+            ],
+        )
+        return "\n".join(
+            getattr(block, "text", "")
+            for block in message.content
+            if getattr(block, "type", "") == "text"
+        ).strip()
+
+    def run_anthropic_http(
         self,
         query: AgentQuery,
         documents: list[SourceDocument],
