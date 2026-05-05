@@ -1,13 +1,22 @@
 schema_version: "2026-04-30"
 agent_id: "semiconductor-language-shift-agent"
+kind: "agent-template"
 name: "Semiconductor Language Shift Agent"
 description: >
   Reads semiconductor earnings calls, 10-Ks, 10-Qs, investor decks, and
   guidance updates, then flags language changes around AI demand, inventory,
   gross margin, capex, lead times, and customer concentration.
 
+runtime: python
+entrypoint: agent.py
+command: python agent.py
+cwd: "."
+
 response_formats:
   - freeform
+
+metrics:
+  - semiconductor_language_shift
 
 execution_target:
   language: python

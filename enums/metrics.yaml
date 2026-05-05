@@ -5,3 +5,7 @@
 - id: customer_health_score
   label: Customer Health Score
   unit: score
+
+- id: semiconductor_language_shift
+  label: Semiconductor Language Shift
+  unit: signal

@@ -33,6 +33,7 @@ Optionally set `ANTHROPIC_MODEL` in the environment to override the default
 
 - Entry point: `agent.py`
 - Agent class: `SemiconductorLanguageShiftAgent`
+- CLI command: `python agent.py`
 - Required secret: `ANTHROPIC_API_KEY`
 - External API: `https://api.anthropic.com/v1/messages`
 - Dependencies: `requirements.txt`

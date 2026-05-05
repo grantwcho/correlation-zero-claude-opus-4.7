@@ -1,7 +1,10 @@
 language: python
+runtime: python
 entrypoint: agent.py
 agent_class: SemiconductorLanguageShiftAgent
 method: freeform
+command: python agent.py
+cwd: "."
 dependencies:
   requirements_file: requirements.txt
 external_apis:

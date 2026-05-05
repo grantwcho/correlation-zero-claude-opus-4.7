@@ -6,6 +6,7 @@ import json
 import os
 import re
 import subprocess
+import sys
 import urllib.error
 import urllib.request
 import zipfile
@@ -13,7 +14,11 @@ from pathlib import Path
 from typing import Any
 from xml.etree import ElementTree
 
-from correlation_zero import Agent, AgentQuery
+try:
+    from correlation_zero import Agent, AgentQuery
+except ImportError:
+    sys.path.insert(0, str(Path(__file__).resolve().parent / "sdk"))
+    from correlation_zero import Agent, AgentQuery
 
 
 AGENT_ID = "semiconductor-language-shift-agent"
@@ -798,3 +803,35 @@ class SemiconductorLanguageShiftAgent(Agent):
             "1) overall language-change read-through, 2) one bullet per tracked "
             "theme, 3) evidence snippets, 4) open questions or next filings to check."
         )
+
+
+def build_query_from_stdin() -> AgentQuery:
+    raw_input = sys.stdin.read().strip()
+    if not raw_input:
+        return AgentQuery(
+            query_id="cli",
+            prompt="Return a short response that proves the agent is working.",
+        )
+
+    try:
+        payload = json.loads(raw_input)
+    except json.JSONDecodeError:
+        return AgentQuery(query_id="cli", prompt=raw_input)
+
+    return AgentQuery(
+        query_id=str(payload.get("query_id") or payload.get("id") or "cli"),
+        prompt=str(payload.get("prompt") or payload.get("query") or raw_input),
+        response_format=str(payload.get("response_format") or "freeform"),
+        context=payload.get("context") if isinstance(payload.get("context"), dict) else {},
+        metrics=payload.get("metrics") if isinstance(payload.get("metrics"), list) else [],
+    )
+
+
+def main() -> int:
+    query = build_query_from_stdin()
+    print(SemiconductorLanguageShiftAgent().freeform(query))
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
