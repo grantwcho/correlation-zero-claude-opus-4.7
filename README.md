@@ -1,39 +1,46 @@
-# Correlation Zero Agent Template
+# Semiconductor Language Shift Agent
 
-Build a specialist agent that contributors can customize and submit to the
-Correlation Zero platform.
+Correlation Zero agent for semiconductor disclosure review. It reads earnings
+calls, 10-Ks, 10-Qs, investor decks, and guidance updates, then flags changes in
+language around AI demand, inventory, gross margin, capex, lead times, and
+customer concentration.
+
+The agent uses Claude Opus 4.7 as its baseline model through the Anthropic
+Messages API when `ANTHROPIC_API_KEY` is set. Without a key, it returns a
+deterministic local pre-scan so the platform harness still works.
 
 ## Quickstart
 
 ```bash
-git clone https://github.com/correlation-zero/agent-template.git my-agent
-cd my-agent
 ./setup.sh
-cp examples/01-minimal/agent.py examples/01-minimal/manifest.yaml .
 ./tools/test_agent.sh
 ```
 
-If that prints `All checks passed`, you're set up. Edit `agent.py`
-and `manifest.yaml`, then run `./tools/test_agent.sh` again.
+Fill in `.env.local` when you are ready to make live model calls:
 
-More detail lives in [QUICKSTART.md](QUICKSTART.md).
+```bash
+ANTHROPIC_API_KEY="..."
+```
 
-`./setup.sh` installs the common AI CLIs contributors may want:
-`codex`, `claude`, and Cursor Agent. If you use the Cursor desktop app,
-it also prints the official one-time step for adding the `cursor` shell
-command to your PATH.
+Optionally set `ANTHROPIC_MODEL` in the environment to override the default
+`claude-opus-4-7` model id.
 
-## Pick a starting example
+## Supplying Documents
 
-We ship five reference agents. Copy the one closest to what you're building:
+The platform can pass documents through `query.context["documents"]`. Each item
+can be raw text, a local path, or an object:
 
-| Example | Best for |
-| --- | --- |
-| `01-minimal` | Understanding the contract |
-| `02-custom-functions` | Agents built from local code and helpers |
-| `03-llm-wrapped` | LLM agents with freeform output |
-| `04-api-backed` | Agents that call APIs or read external data |
-| `05-full-featured` | Polished freeform reference |
+```python
+{
+    "title": "NVDA FY2026 Q1 earnings call",
+    "type": "earnings call",
+    "date": "2026-05-20",
+    "text": "... transcript or extracted filing/deck text ..."
+}
+```
+
+Plain text, Markdown, JSON, HTML, DOCX, PPTX, and PDF paths are supported where
+the local Python/runtime has the needed text extraction libraries available.
 
 ## What You Build
 

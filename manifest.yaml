@@ -1,22 +1,18 @@
-# Reference manifest for a Correlation Zero agent.
-# This file is intentionally verbose and commented.
-
 schema_version: "2026-04-30"
-agent_id: "example-agent-001"
-name: "Example Contributor Agent"
+agent_id: "semiconductor-language-shift-agent"
+name: "Semiconductor Language Shift Agent"
 description: >
-  Answers platform queries by combining contributor-defined prompts, APIs,
-  functions, and local code.
+  Reads semiconductor earnings calls, 10-Ks, 10-Qs, investor decks, and
+  guidance updates, then flags language changes around AI demand, inventory,
+  gross margin, capex, lead times, and customer concentration.
 
-# The only supported agent response format is freeform.
 response_formats:
   - freeform
 
-# Optional: include metric ids if your agent is tied to platform metrics.
-# metrics:
-#   - example_metric
-
-# Optional metadata your scoring or UI layer can surface later.
 tags:
-  - example
-  - contributor-agent
+  - semiconductors
+  - earnings-calls
+  - sec-filings
+  - investor-decks
+  - guidance
+  - language-shifts
