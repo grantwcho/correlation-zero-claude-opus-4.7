@@ -83,12 +83,6 @@ operator_managed_access:
     - name: ANTHROPIC_WEBFETCH_MODEL
       default: claude-haiku-4-5-20251001
       purpose: Haiku model used for local WebFetch summaries.
-    - name: ANTHROPIC_TIMEOUT_SECONDS
-      default: "20"
-      purpose: Per-request Anthropic timeout, capped at 20 seconds.
-    - name: ANTHROPIC_TOTAL_TIMEOUT_SECONDS
-      default: "27"
-      purpose: Total freeform call timeout budget, capped at 27 seconds.
     - name: MCP_SERVERS_JSON
       purpose: JSON array of remote MCP server definitions for Anthropic MCP connector passthrough.
 

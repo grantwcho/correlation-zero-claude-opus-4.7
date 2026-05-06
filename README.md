@@ -60,6 +60,4 @@ For local live calls, set `.env.local`:
 ```bash
 ANTHROPIC_API_KEY="..."
 ANTHROPIC_MODEL="claude-opus-4-7"
-ANTHROPIC_TIMEOUT_SECONDS="20"
-ANTHROPIC_TOTAL_TIMEOUT_SECONDS="27"
 ```

@@ -31,12 +31,6 @@ environment:
   - name: ANTHROPIC_WEBFETCH_MODEL
     required: false
     default: claude-haiku-4-5-20251001
-  - name: ANTHROPIC_TIMEOUT_SECONDS
-    required: false
-    default: "20"
-  - name: ANTHROPIC_TOTAL_TIMEOUT_SECONDS
-    required: false
-    default: "27"
   - name: MCP_SERVERS_JSON
     required: false
   - name: MCP_SERVER_URL

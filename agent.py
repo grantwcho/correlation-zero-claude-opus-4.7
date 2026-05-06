@@ -8,11 +8,9 @@ import html
 import json
 import os
 import re
-import socket
 import ssl
 import subprocess
 import sys
-import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -34,8 +32,6 @@ MCP_BETA = "mcp-client-2025-11-20"
 DEFAULT_MODEL = "claude-opus-4-7"
 DEFAULT_HAIKU_MODEL = "claude-haiku-4-5-20251001"
 DEFAULT_MAX_TOKENS = 4096
-DEFAULT_REQUEST_TIMEOUT_SECONDS = 20
-DEFAULT_TOTAL_TIMEOUT_SECONDS = 27
 DEFAULT_MAX_TOOL_ROUNDS = 4
 MAX_TOOL_OUTPUT_CHARS = 12_000
 MAX_WEB_FETCH_CHARS = 40_000
@@ -141,18 +137,6 @@ class OpusToolAgent(Agent):
         self.api_key = os.getenv("ANTHROPIC_API_KEY", "")
         self.model = os.getenv("ANTHROPIC_MODEL", DEFAULT_MODEL)
         self.haiku_model = os.getenv("ANTHROPIC_WEBFETCH_MODEL", DEFAULT_HAIKU_MODEL)
-        self.request_timeout_seconds = env_int(
-            "ANTHROPIC_TIMEOUT_SECONDS",
-            DEFAULT_REQUEST_TIMEOUT_SECONDS,
-            1,
-            DEFAULT_REQUEST_TIMEOUT_SECONDS,
-        )
-        self.total_timeout_seconds = env_int(
-            "ANTHROPIC_TOTAL_TIMEOUT_SECONDS",
-            DEFAULT_TOTAL_TIMEOUT_SECONDS,
-            5,
-            DEFAULT_TOTAL_TIMEOUT_SECONDS,
-        )
         self.max_tool_rounds = env_int(
             "ANTHROPIC_MAX_TOOL_ROUNDS",
             DEFAULT_MAX_TOOL_ROUNDS,
@@ -164,7 +148,6 @@ class OpusToolAgent(Agent):
         if not self.api_key:
             return "ANTHROPIC_API_KEY is not configured for this runtime."
 
-        deadline = time.monotonic() + self.total_timeout_seconds
         messages = self.initial_messages(query)
         tools, mcp_servers = self.build_tools(query.context or {})
         system_prompt = self.system_prompt(query.context or {})
@@ -182,7 +165,7 @@ class OpusToolAgent(Agent):
             if mcp_servers:
                 payload["mcp_servers"] = mcp_servers
 
-            response = self.call_anthropic(payload, deadline, beta_headers)
+            response = self.call_anthropic(payload, beta_headers)
             if "_error" in response:
                 return response["_error"]
             last_response = response
@@ -195,7 +178,7 @@ class OpusToolAgent(Agent):
             if stop_reason != "tool_use":
                 return normalize_content_text(content) or "Anthropic returned an empty response."
 
-            tool_results = self.execute_tool_uses(content, deadline)
+            tool_results = self.execute_tool_uses(content)
             messages.append({"role": "assistant", "content": content})
             messages.append({"role": "user", "content": tool_results})
 
@@ -287,13 +270,8 @@ class OpusToolAgent(Agent):
     def call_anthropic(
         self,
         payload: dict[str, Any],
-        deadline: float,
         beta_headers: list[str] | None = None,
     ) -> dict[str, Any]:
-        remaining = deadline - time.monotonic()
-        if remaining <= 1:
-            return {"_error": "Anthropic call skipped because the platform timeout budget is exhausted."}
-        timeout = max(1, min(self.request_timeout_seconds, int(remaining - 0.5)))
         headers = {
             "anthropic-version": ANTHROPIC_VERSION,
             "content-type": "application/json",
@@ -311,19 +289,16 @@ class OpusToolAgent(Agent):
         try:
             with urllib.request.urlopen(
                 request,
-                timeout=timeout,
                 context=verified_ssl_context(),
             ) as response:
                 return json.loads(response.read().decode("utf-8"))
         except urllib.error.HTTPError as exc:
             body = exc.read().decode("utf-8", errors="ignore")
             return {"_error": f"Anthropic API returned HTTP {exc.code}: {body}"}
-        except (TimeoutError, socket.timeout):
-            return {"_error": f"Anthropic API request timed out after {timeout}s."}
         except urllib.error.URLError as exc:
             return {"_error": f"Anthropic API request failed: {exc.reason}"}
 
-    def execute_tool_uses(self, content: list[dict[str, Any]], deadline: float) -> list[dict[str, Any]]:
+    def execute_tool_uses(self, content: list[dict[str, Any]]) -> list[dict[str, Any]]:
         results: list[dict[str, Any]] = []
         for block in content:
             if block.get("type") != "tool_use":
@@ -331,7 +306,7 @@ class OpusToolAgent(Agent):
             name = block.get("name", "")
             tool_input = block.get("input") or {}
             try:
-                output = self.execute_tool(name, tool_input, deadline)
+                output = self.execute_tool(name, tool_input)
                 is_error = False
             except Exception as exc:
                 output = f"{type(exc).__name__}: {exc}"
@@ -346,7 +321,7 @@ class OpusToolAgent(Agent):
             results.append(result)
         return results
 
-    def execute_tool(self, name: str, tool_input: dict[str, Any], deadline: float) -> str:
+    def execute_tool(self, name: str, tool_input: dict[str, Any]) -> str:
         if name == "Read":
             return self.read_file(tool_input)
         if name == "Write":
@@ -360,9 +335,9 @@ class OpusToolAgent(Agent):
         if name in {"Bash", "bash"}:
             return self.run_bash(tool_input)
         if name == "WebFetch":
-            return self.local_web_fetch(tool_input, deadline)
+            return self.local_web_fetch(tool_input)
         if name == "Task":
-            return self.run_task(tool_input, deadline)
+            return self.run_task(tool_input)
         if name == "str_replace_based_edit_tool":
             return self.text_editor(tool_input)
         return f"Unknown tool: {name}"
@@ -449,14 +424,12 @@ class OpusToolAgent(Agent):
         command = str(tool_input.get("command") or "")
         if not command:
             raise ValueError("command is required.")
-        timeout = max(1, min(int(tool_input.get("timeout_seconds") or 8), 12))
         completed = subprocess.run(
             command,
             shell=True,
             cwd=str(WORKSPACE_ROOT),
             capture_output=True,
             text=True,
-            timeout=timeout,
         )
         return (
             f"exit_code={completed.returncode}\n"
@@ -464,7 +437,7 @@ class OpusToolAgent(Agent):
             f"stderr:\n{completed.stderr}"
         )
 
-    def local_web_fetch(self, tool_input: dict[str, Any], deadline: float) -> str:
+    def local_web_fetch(self, tool_input: dict[str, Any]) -> str:
         url = str(tool_input.get("url") or "")
         prompt = str(tool_input.get("prompt") or "Summarize the fetched page.")
         if not url.startswith(("http://", "https://")):
@@ -473,14 +446,13 @@ class OpusToolAgent(Agent):
             url,
             headers={"User-Agent": "Mozilla/5.0 OpusToolAgent/1.0"},
         )
-        timeout = max(1, min(8, int(deadline - time.monotonic() - 1)))
-        with urllib.request.urlopen(request, timeout=timeout, context=verified_ssl_context()) as response:
+        with urllib.request.urlopen(request, context=verified_ssl_context()) as response:
             raw = response.read(MAX_WEB_FETCH_CHARS).decode("utf-8", errors="replace")
             media_type = response.headers.get("content-type", "")
 
         text = self.html_to_text(raw) if "html" in media_type else clean_text(raw)
-        if env_flag("ANTHROPIC_WEBFETCH_USE_HAIKU", True) and deadline - time.monotonic() > 8:
-            summary = self.summarize_with_haiku(url, prompt, text, deadline)
+        if env_flag("ANTHROPIC_WEBFETCH_USE_HAIKU", True):
+            summary = self.summarize_with_haiku(url, prompt, text)
             if summary:
                 return summary
         return f"Fetched {url}\nContent-Type: {media_type}\n\n{truncate(text)}"
@@ -490,7 +462,7 @@ class OpusToolAgent(Agent):
         parser.feed(raw_html)
         return parser.text()
 
-    def summarize_with_haiku(self, url: str, prompt: str, text: str, deadline: float) -> str:
+    def summarize_with_haiku(self, url: str, prompt: str, text: str) -> str:
         payload = {
             "model": self.haiku_model,
             "max_tokens": 1024,
@@ -502,12 +474,12 @@ class OpusToolAgent(Agent):
                 }
             ],
         }
-        response = self.call_anthropic(payload, deadline, [])
+        response = self.call_anthropic(payload, [])
         if "_error" in response:
             return ""
         return normalize_content_text(response.get("content", []))
 
-    def run_task(self, tool_input: dict[str, Any], deadline: float) -> str:
+    def run_task(self, tool_input: dict[str, Any]) -> str:
         prompt = str(tool_input.get("prompt") or "")
         if not prompt:
             raise ValueError("prompt is required.")
@@ -519,7 +491,7 @@ class OpusToolAgent(Agent):
             "system": f"You are a focused sub-agent. Complete this delegated task: {description}",
             "messages": [{"role": "user", "content": prompt}],
         }
-        response = self.call_anthropic(payload, deadline, [])
+        response = self.call_anthropic(payload, [])
         if "_error" in response:
             return response["_error"]
         return normalize_content_text(response.get("content", []))
@@ -657,13 +629,10 @@ class OpusToolAgent(Agent):
     def tool_bash(self) -> dict[str, Any]:
         return {
             "name": "Bash",
-            "description": "Run a non-interactive shell command in the workspace. Use for tests, inspection, package commands, and simple automation. Commands run with a short timeout and return stdout, stderr, and exit code.",
+            "description": "Run a non-interactive shell command in the workspace. Use for tests, inspection, package commands, and simple automation. Returns stdout, stderr, and exit code.",
             "input_schema": {
                 "type": "object",
-                "properties": {
-                    "command": {"type": "string"},
-                    "timeout_seconds": {"type": "integer"},
-                },
+                "properties": {"command": {"type": "string"}},
                 "required": ["command"],
             },
         }
