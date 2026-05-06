@@ -1,7 +1,7 @@
 language: python
 runtime: python
 entrypoint: agent.py
-agent_class: SemiconductorLanguageShiftAgent
+agent_class: PlainAnthropicOpusAgent
 method: freeform
 command: python agent.py
 cwd: "."

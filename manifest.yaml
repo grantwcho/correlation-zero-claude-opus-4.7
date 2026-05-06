@@ -1,11 +1,11 @@
 schema_version: "2026-04-30"
-agent_id: "semiconductor-language-shift-agent"
+agent_id: "plain-anthropic-opus-agent"
 kind: "agent-template"
-name: "Semiconductor Language Shift Agent"
+name: "Plain Anthropic Opus Agent"
 description: >
-  Reads semiconductor earnings calls, 10-Ks, 10-Qs, investor decks, and
-  guidance updates, then flags language changes around AI demand, inventory,
-  gross margin, capex, lead times, and customer concentration.
+  Plain vanilla Anthropic Messages API agent. It sends the user's prompt to the
+  configured Claude Opus model using ANTHROPIC_API_KEY and returns the model's
+  text response.
 
 runtime: python
 entrypoint: agent.py
@@ -16,12 +16,12 @@ response_formats:
   - freeform
 
 metrics:
-  - semiconductor_language_shift
+  - plain_anthropic_response
 
 execution_target:
   language: python
   entrypoint: agent.py
-  agent_class: SemiconductorLanguageShiftAgent
+  agent_class: PlainAnthropicOpusAgent
   method: freeform
 
 dependency_declaration:
@@ -42,16 +42,13 @@ operator_managed_access:
     - name: ANTHROPIC_API_KEY
       provider: Anthropic
       required: true
-      purpose: Call Claude Opus 4.7 through the Anthropic Messages API.
+      purpose: Call the Anthropic Messages API.
   optional_environment:
     - name: ANTHROPIC_MODEL
       default: claude-opus-4-7
-      purpose: Override the baseline Opus model id if the operator pins a dated model alias.
+      purpose: Override the default Claude Opus model id.
 
 tags:
-  - semiconductors
-  - earnings-calls
-  - sec-filings
-  - investor-decks
-  - guidance
-  - language-shifts
+  - anthropic
+  - opus
+  - plain-llm

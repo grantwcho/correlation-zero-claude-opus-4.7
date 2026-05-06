@@ -9,3 +9,7 @@
 - id: semiconductor_language_shift
   label: Semiconductor Language Shift
   unit: signal
+
+- id: plain_anthropic_response
+  label: Plain Anthropic Response
+  unit: text
