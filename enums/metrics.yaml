@@ -13,3 +13,7 @@
 - id: plain_anthropic_response
   label: Plain Anthropic Response
   unit: text
+
+- id: opus_tool_response
+  label: Opus Tool Response
+  unit: text

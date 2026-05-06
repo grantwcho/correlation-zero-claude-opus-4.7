@@ -1,7 +1,7 @@
 language: python
 runtime: python
 entrypoint: agent.py
-agent_class: PlainAnthropicOpusAgent
+agent_class: OpusToolAgent
 method: freeform
 command: python agent.py
 cwd: "."
@@ -13,14 +13,50 @@ external_apis:
     url: https://api.anthropic.com/v1/messages
     required_secret: ANTHROPIC_API_KEY
     default_model: claude-opus-4-7
+  - name: Remote MCP Connector
+    provider: Anthropic
+    url: https://api.anthropic.com/v1/messages
+    beta_header: mcp-client-2025-11-20
 secrets:
   - name: ANTHROPIC_API_KEY
     provider: Anthropic
     required: true
+  - name: MCP_AUTH_TOKEN
+    provider: Remote MCP server
+    required: false
 environment:
   - name: ANTHROPIC_MODEL
     required: false
     default: claude-opus-4-7
+  - name: ANTHROPIC_WEBFETCH_MODEL
+    required: false
+    default: claude-haiku-4-5-20251001
   - name: ANTHROPIC_TIMEOUT_SECONDS
     required: false
     default: "20"
+  - name: ANTHROPIC_TOTAL_TIMEOUT_SECONDS
+    required: false
+    default: "27"
+  - name: MCP_SERVERS_JSON
+    required: false
+  - name: MCP_SERVER_URL
+    required: false
+  - name: MCP_SERVER_NAME
+    required: false
+capabilities:
+  server_tools:
+    - web_search_20260209
+    - web_fetch_20260209
+    - code_execution_20260120
+  local_tools:
+    - bash_20250124
+    - WebFetch
+    - Read
+    - Write
+    - Edit
+    - Glob
+    - Grep
+    - Bash
+    - Task
+    - str_replace_based_edit_tool
+  mcp_connector: true

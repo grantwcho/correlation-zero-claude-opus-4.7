@@ -1,11 +1,11 @@
 schema_version: "2026-04-30"
-agent_id: "plain-anthropic-opus-agent"
+agent_id: "opus-4-7-tool-agent"
 kind: "agent-template"
-name: "Plain Anthropic Opus Agent"
+name: "Opus 4.7 Tool Agent"
 description: >
-  Plain vanilla Anthropic Messages API agent. It sends the user's prompt to the
-  configured Claude Opus model using ANTHROPIC_API_KEY and returns the model's
-  text response.
+  Claude Opus 4.7 agent with Anthropic server-side web search, server-side web
+  fetch, server-side code execution, local web fetch, file operations, bash,
+  task sub-agent calls, and remote MCP connector passthrough.
 
 runtime: python
 entrypoint: agent.py
@@ -16,12 +16,12 @@ response_formats:
   - freeform
 
 metrics:
-  - plain_anthropic_response
+  - opus_tool_response
 
 execution_target:
   language: python
   entrypoint: agent.py
-  agent_class: PlainAnthropicOpusAgent
+  agent_class: OpusToolAgent
   method: freeform
 
 dependency_declaration:
@@ -36,22 +36,66 @@ external_apis:
     auth_env: ANTHROPIC_API_KEY
     model_env: ANTHROPIC_MODEL
     default_model: claude-opus-4-7
+  - name: Anthropic MCP Connector
+    provider: Anthropic
+    base_url: https://api.anthropic.com
+    endpoint: /v1/messages
+    beta_header: mcp-client-2025-11-20
+
+capabilities:
+  server_tools:
+    - web_search_20260209
+    - web_fetch_20260209
+    - code_execution_20260120
+  local_tools:
+    - bash_20250124
+    - WebFetch
+    - Read
+    - Write
+    - Edit
+    - Glob
+    - Grep
+    - Bash
+    - Task
+    - str_replace_based_edit_tool
+  mcp:
+    enabled: true
+    configuration:
+      - MCP_SERVERS_JSON
+      - MCP_SERVER_URL
+      - MCP_SERVER_NAME
+      - MCP_AUTH_TOKEN
 
 operator_managed_access:
   secrets:
     - name: ANTHROPIC_API_KEY
       provider: Anthropic
       required: true
-      purpose: Call the Anthropic Messages API.
+      purpose: Call Anthropic Messages API, server tools, Task sub-agent calls, and Haiku WebFetch summaries.
+    - name: MCP_AUTH_TOKEN
+      provider: Remote MCP server
+      required: false
+      purpose: Optional bearer token for a configured remote MCP server.
   optional_environment:
     - name: ANTHROPIC_MODEL
       default: claude-opus-4-7
       purpose: Override the default Claude Opus model id.
+    - name: ANTHROPIC_WEBFETCH_MODEL
+      default: claude-haiku-4-5-20251001
+      purpose: Haiku model used for local WebFetch summaries.
     - name: ANTHROPIC_TIMEOUT_SECONDS
       default: "20"
-      purpose: Anthropic request timeout, capped at 20 seconds to stay below the platform watchdog.
+      purpose: Per-request Anthropic timeout, capped at 20 seconds.
+    - name: ANTHROPIC_TOTAL_TIMEOUT_SECONDS
+      default: "27"
+      purpose: Total freeform call timeout budget, capped at 27 seconds.
+    - name: MCP_SERVERS_JSON
+      purpose: JSON array of remote MCP server definitions for Anthropic MCP connector passthrough.
 
 tags:
   - anthropic
   - opus
-  - plain-llm
+  - tools
+  - web-search
+  - web-fetch
+  - mcp
