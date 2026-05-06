@@ -14,6 +14,7 @@ Anthropic model ID or alias.
 - CLI command: `python agent.py`
 - Required secret: `ANTHROPIC_API_KEY`
 - Optional model override: `ANTHROPIC_MODEL`
+- Optional request timeout: `ANTHROPIC_TIMEOUT_SECONDS`, capped at 20 seconds
 - External API: `https://api.anthropic.com/v1/messages`
 - Dependency: `certifi`
 
@@ -29,6 +30,7 @@ For local live calls, set `.env.local`:
 ```bash
 ANTHROPIC_API_KEY="..."
 ANTHROPIC_MODEL="claude-opus-4-7"
+ANTHROPIC_TIMEOUT_SECONDS="20"
 ```
 
 Without `ANTHROPIC_API_KEY`, the agent returns a short configuration error

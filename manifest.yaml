@@ -47,6 +47,9 @@ operator_managed_access:
     - name: ANTHROPIC_MODEL
       default: claude-opus-4-7
       purpose: Override the default Claude Opus model id.
+    - name: ANTHROPIC_TIMEOUT_SECONDS
+      default: "20"
+      purpose: Anthropic request timeout, capped at 20 seconds to stay below the platform watchdog.
 
 tags:
   - anthropic

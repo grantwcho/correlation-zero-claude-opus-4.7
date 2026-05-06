@@ -17,3 +17,10 @@ secrets:
   - name: ANTHROPIC_API_KEY
     provider: Anthropic
     required: true
+environment:
+  - name: ANTHROPIC_MODEL
+    required: false
+    default: claude-opus-4-7
+  - name: ANTHROPIC_TIMEOUT_SECONDS
+    required: false
+    default: "20"

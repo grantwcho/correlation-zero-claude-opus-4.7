@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import socket
 import ssl
 import sys
 import urllib.error
@@ -23,6 +24,7 @@ ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages"
 ANTHROPIC_VERSION = "2023-06-01"
 DEFAULT_MODEL = "claude-opus-4-7"
 DEFAULT_MAX_TOKENS = 2048
+DEFAULT_REQUEST_TIMEOUT_SECONDS = 20
 
 
 def load_env_local() -> None:
@@ -64,6 +66,7 @@ class PlainAnthropicOpusAgent(Agent):
         load_env_local()
         self.api_key = os.getenv("ANTHROPIC_API_KEY", "")
         self.model = os.getenv("ANTHROPIC_MODEL", DEFAULT_MODEL)
+        self.timeout_seconds = self.request_timeout_seconds()
 
     def freeform(self, query: AgentQuery) -> str:
         if not self.api_key:
@@ -84,13 +87,18 @@ class PlainAnthropicOpusAgent(Agent):
         try:
             with urllib.request.urlopen(
                 request,
-                timeout=60,
+                timeout=self.timeout_seconds,
                 context=verified_ssl_context(),
             ) as response:
                 result = json.loads(response.read().decode("utf-8"))
         except urllib.error.HTTPError as exc:
             body = exc.read().decode("utf-8", errors="ignore")
             return f"Anthropic API returned HTTP {exc.code}: {body}"
+        except (TimeoutError, socket.timeout):
+            return (
+                "Anthropic API request timed out before the platform watchdog. "
+                f"Timeout used: {self.timeout_seconds}s."
+            )
         except urllib.error.URLError as exc:
             return f"Anthropic API request failed: {exc.reason}"
 
@@ -102,7 +110,6 @@ class PlainAnthropicOpusAgent(Agent):
         system_prompt = str(context.get("system") or "You are a helpful assistant.")
         model = str(context.get("model") or self.model)
         max_tokens = int(context.get("max_tokens") or DEFAULT_MAX_TOKENS)
-        temperature = float(context.get("temperature") or 0.2)
         messages = context.get("messages")
 
         if not isinstance(messages, list) or not messages:
@@ -111,10 +118,19 @@ class PlainAnthropicOpusAgent(Agent):
         return {
             "model": model,
             "max_tokens": max_tokens,
-            "temperature": temperature,
             "system": system_prompt,
             "messages": messages,
         }
+
+    def request_timeout_seconds(self) -> int:
+        raw_timeout = os.getenv("ANTHROPIC_TIMEOUT_SECONDS", "")
+        if not raw_timeout:
+            return DEFAULT_REQUEST_TIMEOUT_SECONDS
+        try:
+            timeout = int(raw_timeout)
+        except ValueError:
+            return DEFAULT_REQUEST_TIMEOUT_SECONDS
+        return max(1, min(timeout, DEFAULT_REQUEST_TIMEOUT_SECONDS))
 
 
 def build_query_from_stdin() -> AgentQuery:
