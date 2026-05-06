@@ -1,6 +1,16 @@
 # Opus 4.7 Tool Agent
 
-Correlation Zero agent that calls Claude Opus 4.7 with tools enabled.
+Correlation Zero agent that calls Claude Opus 4.7 with tools enabled and a
+Claude.ai-style behavior scaffold.
+
+## Behavior Layer
+
+The system prompt ports the high-impact Claude.ai behavior categories into the
+API runtime: Opus 4.7 identity and Anthropic product boundaries, dynamic current
+date plus January 2026 knowledge-cutoff handling, prose-first formatting
+discipline, warm concise tone, tool-first ambiguity resolution, present-tense web
+search policy, soft refusals with hard safety boundaries, wellbeing guardrails,
+legal/financial/medical caveats, and evenhandedness on contested topics.
 
 ## Enabled Capabilities
 
@@ -23,7 +33,7 @@ Correlation Zero agent that calls Claude Opus 4.7 with tools enabled.
 - Optional model override: `ANTHROPIC_MODEL`
 - Optional MCP config: `MCP_SERVERS_JSON` or `MCP_SERVER_URL`
 - External API: `https://api.anthropic.com/v1/messages`
-- Dependency: `certifi`
+- Dependencies: `certifi`, `PyYAML`
 
 ## MCP Configuration
 
