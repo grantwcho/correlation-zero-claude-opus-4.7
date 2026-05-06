@@ -187,6 +187,12 @@ def current_date_for_prompt(context: dict[str, Any]) -> str:
     return date.today().isoformat()
 
 
+def container_id_from(value: Any) -> str:
+    if isinstance(value, dict):
+        value = value.get("id")
+    return str(value).strip() if value else ""
+
+
 def verified_ssl_context() -> ssl.SSLContext | None:
     try:
         import certifi
@@ -234,6 +240,8 @@ class OpusToolAgent(Agent):
         tools, mcp_servers = self.build_tools(query.context or {})
         system_prompt = self.system_prompt(query.context or {})
         beta_headers = [MCP_BETA] if mcp_servers else []
+        has_code_execution = any(tool.get("name") == "code_execution" for tool in tools)
+        container_id = self.initial_container_id(query.context or {})
 
         last_response: dict[str, Any] | None = None
         for _ in range(self.max_tool_rounds + 1):
@@ -246,11 +254,14 @@ class OpusToolAgent(Agent):
             }
             if mcp_servers:
                 payload["mcp_servers"] = mcp_servers
+            if has_code_execution and container_id:
+                payload["container"] = container_id
 
             response = self.call_anthropic(payload, beta_headers)
             if "_error" in response:
                 return response["_error"]
             last_response = response
+            container_id = self.response_container_id(response) or container_id
 
             stop_reason = response.get("stop_reason")
             content = response.get("content", [])
@@ -269,6 +280,16 @@ class OpusToolAgent(Agent):
                 "Stopped after maximum tool rounds without a final text response."
             )
         return "Stopped before Anthropic returned a response."
+
+    def initial_container_id(self, context: dict[str, Any]) -> str:
+        return (
+            container_id_from(context.get("container"))
+            or container_id_from(context.get("container_id"))
+            or container_id_from(context.get("containerId"))
+        )
+
+    def response_container_id(self, response: dict[str, Any]) -> str:
+        return container_id_from(response.get("container"))
 
     def initial_messages(self, query: AgentQuery) -> list[dict[str, Any]]:
         context = query.context or {}
