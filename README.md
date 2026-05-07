@@ -60,9 +60,18 @@ MCP_AUTH_TOKEN="optional-token"
 
 ## Quickstart
 
+macOS, Linux, or WSL:
 ```bash
+./setup.sh
 ./tools/test_agent.sh
 ./tools/prepare_submission.sh
+```
+
+Windows PowerShell:
+```powershell
+.\setup.ps1
+.\tools\test_agent.ps1
+.\tools\prepare_submission.ps1
 ```
 
 For local live calls, set `.env.local`:
