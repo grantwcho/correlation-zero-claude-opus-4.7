@@ -17,6 +17,11 @@ This bootstraps:
 If you use the Cursor desktop app, the script also prints the official
 one-time step for enabling the `cursor` shell command.
 
+On Windows Git Bash/MSYS/Cygwin, the script skips Cursor Agent because Cursor's
+bash installer does not support that shell environment. Install Cursor Desktop
+for Windows, or run `./setup.sh` from WSL/Linux/macOS if you need
+`cursor-agent`.
+
 ## 2. Copy the smallest runnable example
 
 ```bash

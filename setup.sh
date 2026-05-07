@@ -7,6 +7,25 @@ have_cmd() {
   command -v "$1" >/dev/null 2>&1
 }
 
+host_os() {
+  if [[ -n "${SETUP_HOST_OS:-}" ]]; then
+    echo "$SETUP_HOST_OS"
+    return 0
+  fi
+  uname -s 2>/dev/null || echo "unknown"
+}
+
+is_windows_bash() {
+  case "$(host_os)" in
+    MINGW*|MSYS*|CYGWIN*)
+      return 0
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
 run_cmd() {
   if [[ "$DRY_RUN" == "1" ]]; then
     echo "[dry-run] $*"
@@ -45,6 +64,14 @@ install_cursor_agent() {
     return 0
   fi
 
+  if is_windows_bash; then
+    cat <<EOF
+Skipping Cursor Agent: Cursor's bash installer does not support Git Bash/MSYS on Windows ($(host_os)).
+Install Cursor Desktop for Windows instead, or rerun ./setup.sh from WSL/Linux/macOS if you need cursor-agent.
+EOF
+    return 0
+  fi
+
   echo "Installing Cursor Agent..."
   if [[ "$DRY_RUN" == "1" ]]; then
     echo "[dry-run] bash -lc 'curl -fsS https://cursor.com/install | bash'"
@@ -68,6 +95,17 @@ Official setup is done from the Cursor desktop app:
 EOF
 }
 
+print_command_status() {
+  local command_name="$1"
+  local label="$2"
+
+  if have_cmd "$command_name"; then
+    echo "  - $label"
+  else
+    echo "  - $label (not installed)"
+  fi
+}
+
 install_npm_cli codex "@openai/codex" "Codex CLI"
 install_npm_cli claude "@anthropic-ai/claude-code" "Claude Code"
 install_cursor_agent
@@ -75,12 +113,8 @@ print_cursor_shell_hint
 
 echo
 echo "Bootstrap complete."
-echo "Available commands:"
-echo "  - codex"
-echo "  - claude"
-if have_cmd cursor; then
-  echo "  - cursor"
-else
-  echo "  - cursor-agent"
-fi
-
+echo "Command status:"
+print_command_status codex "codex"
+print_command_status claude "claude"
+print_command_status cursor "cursor"
+print_command_status cursor-agent "cursor-agent"
